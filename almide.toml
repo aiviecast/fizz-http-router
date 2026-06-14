@@ -1,0 +1,4 @@
+[package]
+name = "fizz_http_router"
+version = "0.1.0"
+description = "Fizz HTTP router — map (method, path) to a route id by ordered method+prefix matching. One Almide core, native + wasm."

@@ -1,0 +1,17 @@
+// CLI (native) — stdin "METHOD path" を route 名に。
+//   printf 'POST /api/tts/voicevox\nGET /api/health\nGET /\n' | fizz-http-router
+import self as r
+import io
+import string
+
+effect fn main() -> Unit = {
+  var open = true
+  while open {
+    let line = io.read_line()
+    if string.trim(line) == "" then { open = false }
+    else {
+      let l = string.trim(line)
+      println(l + "\t" + r.route_name(r.route_line(l)))
+    }
+  }
+}

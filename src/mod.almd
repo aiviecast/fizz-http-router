@@ -1,0 +1,47 @@
+// fizz_http_router — (method, path) → route id の振り分け表。
+//
+// 責務 (一行): HTTP の method と path から、それを処理するハンドラ(route id)を選ぶ。
+//
+// §7 server.ts の dispatch は「method + url.startsWith(prefix) → handler」。順序が
+// 重要(より具体的な /api/tts/voicevox を /api/tts より先に判定)。各 handler 呼び出しは
+// Node の I/O だが、振り分け表は純粋なので Almide に集約=単一の正本。
+//
+// 移植元: openaituber server.ts のエンドポイント分岐。
+//
+// route id: 0 health / 1 probe / 2 convert / 3 chat / 4 tts_voicevox / 5 tts /
+//           6 memory / 7 settings / 8 x / -1 not-found(静的配信等)
+
+import list
+import string
+
+// (method ("" = 任意), path prefix, route id)。リスト順に最初に当たったものを返す。
+fn routes() -> List[(String, String, Int)] = [
+  ("GET",  "/api/health", 0),
+  ("POST", "/api/probe", 1),
+  ("POST", "/api/convert", 2),
+  ("POST", "/api/chat", 3),
+  ("POST", "/api/tts/voicevox", 4),   // /api/tts より先 (具体的優先)
+  ("POST", "/api/tts", 5),
+  ("",     "/api/memory", 6),
+  ("",     "/api/settings", 7),
+  ("",     "/api/x/", 8),
+]
+
+// (method, path) → route id (未対応は -1)。method は完全一致 ("" は任意)、path は prefix。
+fn route(method: String, path: String) -> Int =
+  match list.find(routes(), (r) => (r.0 == "" or r.0 == method) and string.starts_with(path, r.1)) {
+    some(r) => r.2,
+    none    => 0 - 1,
+  }
+
+// "METHOD path" の 1 行を分割して route。wasm から 1 文字列で渡せる。
+fn route_line(line: String) -> Int =
+  match string.index_of(line, " ") {
+    none    => 0 - 1,
+    some(i) => route(string.slice(line, 0, i), string.slice(line, i + 1)),
+  }
+
+fn route_name(id: Int) -> String = match id {
+  0 => "health", 1 => "probe", 2 => "convert", 3 => "chat", 4 => "tts_voicevox",
+  5 => "tts", 6 => "memory", 7 => "settings", 8 => "x", _ => "not_found",
+}

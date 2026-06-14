@@ -1,0 +1,23 @@
+// wasm — Node サーバの dispatch から呼ぶ。"METHOD path" を線形メモリに書き
+// (route_alloc → JS が書く)、route() が route id (Float, -1=未対応) を返す。
+import self as r
+import bytes
+import float
+import int
+
+var g_buf: Bytes = bytes.new(0)
+
+@export(wasm, "route_alloc")
+fn route_alloc(len: Float) -> RawPtr = {
+  g_buf = bytes.new(float.to_int(len))
+  bytes.as_mut_ptr(g_buf)
+}
+
+@export(wasm, "route")
+fn route() -> Float = int.to_float(r.route_line(bytes.to_string_lossy(g_buf)))
+
+effect fn main() -> Unit = {
+  let _a = route_alloc(1.0)
+  let _b = route()
+  ()
+}

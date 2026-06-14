@@ -1,0 +1,22 @@
+import self as r
+test "method + prefix routing" {
+  assert_eq(r.route("GET", "/api/health"), 0)
+  assert_eq(r.route("POST", "/api/chat"), 3)
+  assert_eq(r.route("POST", "/api/chat/stream"), 3)   // prefix
+}
+test "specific before general (tts/voicevox before tts)" {
+  assert_eq(r.route("POST", "/api/tts/voicevox"), 4)
+  assert_eq(r.route("POST", "/api/tts"), 5)
+}
+test "method matters; any-method routes" {
+  assert_eq(r.route("GET", "/api/chat"), 0 - 1)        // chat は POST のみ
+  assert_eq(r.route("GET", "/api/memory/recall"), 6)   // memory は任意 method
+  assert_eq(r.route("DELETE", "/api/x/post"), 8)
+}
+test "unmatched → -1; route_line + names" {
+  assert_eq(r.route("GET", "/"), 0 - 1)
+  assert_eq(r.route_line("POST /api/tts/voicevox"), 4)
+  assert_eq(r.route_line("nope"), 0 - 1)
+  assert_eq(r.route_name(3), "chat")
+  assert_eq(r.route_name(99), "not_found")
+}
