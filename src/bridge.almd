@@ -13,11 +13,12 @@ fn route_alloc(len: Float) -> RawPtr = {
   bytes.as_mut_ptr(g_buf)
 }
 
+// Almide 名は route_dispatch (mod の `route` と同名衝突を避ける。wasm export 名は "route")。
 @export(wasm, "route")
-fn route() -> Float = int.to_float(r.route_line(bytes.to_string_lossy(g_buf)))
+fn route_dispatch() -> Float = int.to_float(r.route_line(bytes.to_string_lossy(g_buf)))
 
 effect fn main() -> Unit = {
   let _a = route_alloc(1.0)
-  let _b = route()
+  let _b = route_dispatch()
   ()
 }
