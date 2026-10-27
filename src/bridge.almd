@@ -2,6 +2,7 @@
 // (route_alloc → JS が書く)、route() が route id (Float, -1=未対応) を返す。
 import self as r
 import bytes
+import ffi
 import float
 import int
 
@@ -10,7 +11,7 @@ var g_buf: Bytes = bytes.zeros(0)
 @export(wasm, "route_alloc")
 fn route_alloc(len: Float) -> RawPtr = {
   g_buf = bytes.zeros(int.from_saturating(len))
-  bytes.as_mut_ptr(g_buf)
+  ffi.address(g_buf)
 }
 
 // Almide 名は route_dispatch (mod の `route` と同名衝突を避ける。wasm export 名は "route")。
