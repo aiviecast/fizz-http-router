@@ -6,20 +6,20 @@ import ffi
 import float
 import int
 
-var g_buf: Bytes = bytes.zeros(0)
+var g_buf: Region = ffi.region(bytes.new())
 
-@export(wasm, "route_alloc")
-fn route_alloc(len: Float) -> RawPtr = {
-  g_buf = bytes.zeros(int.from_saturating(len))
-  ffi.address(g_buf)
+@export(wasm, "route_alloc", returns: address)
+effect fn route_alloc(len: Float) -> Region = {
+  g_buf = ffi.alloc(int.from_saturating(len))!
+  g_buf
 }
 
 // Almide 名は route_dispatch (mod の `route` と同名衝突を避ける。wasm export 名は "route")。
 @export(wasm, "route")
-fn route_dispatch() -> Float = float.from(r.route_line(bytes.to_string_lossy(g_buf)))
+effect fn route_dispatch() -> Float = float.from(r.route_line(bytes.to_string_lossy(ffi.to_bytes(g_buf)!)))
 
 effect fn main() -> Unit = {
-  let _a = route_alloc(1.0)
-  let _b = route_dispatch()
+  let _a = route_alloc(1.0)!
+  let _b = route_dispatch()!
   ()
 }
